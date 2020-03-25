@@ -4,21 +4,21 @@ import scalariform.formatter.preferences._
 
 // Settings for entire build
 
+enablePlugins(ScalaJSPlugin)
+
 ThisBuild/version := "2.4.0-SNAPSHOT"
 
 ThisBuild/organization := "org.bitbucket.inkytonik.kiama"
 
 ThisBuild/scalaVersion := "2.13.0"
-ThisBuild/crossScalaVersions := Seq("2.13.0", "2.12.10", "2.11.12", "2.10.7")
+ThisBuild/crossScalaVersions := Seq("2.13.0")
 
 ThisBuild/scalacOptions := {
     // Turn on all lint warnings, except:
     //  - stars-align: incorrectly reports problems if pattern matching of
     //    unapplySeq extractor doesn't match sequence directly
     val lintOption =
-        if (scalaVersion.value.startsWith("2.10"))
-            "-Xlint"
-        else if (scalaVersion.value.startsWith("2.13"))
+        if (scalaVersion.value.startsWith("2.13"))
             "-Xlint:-stars-align,-nonlocal-return,_"
         else
             "-Xlint:-stars-align,_"
@@ -58,12 +58,6 @@ val commonSettings =
         unmanagedSourceDirectories in Compile ++= {
             val sourceDir = (sourceDirectory in Compile).value
             CrossVersion.partialVersion(scalaVersion.value) match {
-                case Some((2, 10)) =>
-                    Seq(sourceDir / "scala-2.10", sourceDir / "scala-2.not11", sourceDir / "scala-2.12-")
-                case Some((2, 11)) =>
-                    Seq(sourceDir / "scala-2.11", sourceDir / "scala-2.11+", sourceDir / "scala-2.12-")
-                case Some((2, 12)) =>
-                    Seq(sourceDir / "scala-2.not11", sourceDir / "scala-2.11+", sourceDir / "scala-2.12-")
                 case Some((2, 13)) =>
                     Seq(sourceDir / "scala-2.not11", sourceDir / "scala-2.11+", sourceDir / "scala-2.13")
                 case version =>
@@ -124,10 +118,6 @@ val versionSettings =
     Seq(
         libraryDependencies ++= {
             CrossVersion.partialVersion(scalaVersion.value) match {
-                case Some((2, 10)) =>
-                    // Avoids "Class javax.annotation.Nullable not found - continuing with a stub."
-                    // and similar with 2.10 compiler
-                    Seq("com.google.code.findbugs" % "jsr305" % "3.0.2")
                 case _ =>
                     Seq()
             }
@@ -137,8 +127,7 @@ val versionSettings =
 // Project configuration:
 //   - base project containing macros and code that they need
 //   - core project containing main Kiama functionality, including its tests
-//   - extras project containing utilities, including their tests and examples
-//   - kiama (root) project aggregates base, core and extras
+//   - kiama (root) project aggregates base and core
 
 def setupProject(project : Project, projectName : String) : Project =
     project.settings(
@@ -150,7 +139,7 @@ def setupSubProject(project : Project, projectName : String) : Project =
         project,
         projectName
     ).enablePlugins(
-        ScalaUnidocPlugin
+      ScalaJSPlugin
     ).settings(
         commonSettings : _*
     ).settings(
@@ -158,24 +147,10 @@ def setupSubProject(project : Project, projectName : String) : Project =
     )
 
 def baseLibraryDependencies (scalaVersion : String) : Seq[ModuleID] = {
-    val dsinfoVersion =
-        if (scalaVersion.startsWith("2.10"))
-            "0.3.0"
-        else
-            "0.4.0"
-    val dsprofileVersion =
-        if (scalaVersion.startsWith("2.10"))
-            "0.3.0"
-        else
-            "0.4.0"
     Seq(
-        // Caching:
+        // Caching (we have to get rid of this for scalajs)
         "com.google.guava" % "guava" % "21.0",
-        // DSL support:
-        "org.bitbucket.inkytonik.dsinfo" %% "dsinfo" % dsinfoVersion,
-        // Profiling:
-        "org.bitbucket.inkytonik.dsprofile" %% "dsprofile" % dsprofileVersion,
-        // Reflection
+        // Reflection (used in Config)
         "org.scala-lang" % "scala-reflect" % scalaVersion
     )
 }
@@ -198,8 +173,6 @@ lazy val base =
         libraryDependencies ++= baseLibraryDependencies(scalaVersion.value),
     )
 
-val extrasProject = ProjectRef(file("."), "extras")
-
 lazy val core =
     setupSubProject(
         project in file("core"),
@@ -209,75 +182,11 @@ lazy val core =
 
         console/initialCommands := """
             import org.bitbucket.inkytonik.kiama._
-            import rewriting.Rewriter._
         """.stripMargin,
         Compile/packageBin/mappings := (Compile/packageBin/mappings).value ++ (base/Compile/packageBin/mappings).value,
         Compile/packageSrc/mappings := (Compile/packageSrc/mappings).value ++ (base/Compile/packageSrc/mappings).value,
-
-        // Unidoc so we combine docs from base and core (but not extras)
-        Compile/doc := (ScalaUnidoc/doc).value,
-        Test/doc := (TestScalaUnidoc/doc).value,
-        ScalaUnidoc/unidoc/target := crossTarget.value / "api",
-        TestScalaUnidoc/unidoc/target := crossTarget.value / "test-api",
-        ScalaUnidoc/unidoc/scalacOptions ++=
-            Seq(
-                if (scalaVersion.value.startsWith("2.10"))
-                    "-Ymacro-no-expand"
-                else
-                    "-Ymacro-expand:none",
-                "-doc-source-url",
-                    "https://bitbucket.org/inkytonik/kiama/src/master€{FILE_PATH}.scala"
-            ),
-        TestScalaUnidoc/unidoc/scalacOptions := (ScalaUnidoc/unidoc/scalacOptions).value,
-        ScalaUnidoc/unidoc/unidocProjectFilter := inAnyProject -- inProjects(extrasProject),
-        TestScalaUnidoc/unidoc/unidocProjectFilter := (ScalaUnidoc/unidoc/unidocProjectFilter).value
     ).dependsOn(
         base % "compile-internal; test-internal"
-    )
-
-lazy val extras =
-    setupSubProject(
-        project in file("extras"),
-        "kiama-extras"
-    ).settings(
-        libraryDependencies ++=
-            Seq(
-                // Command-line handling:
-                "org.rogach" %% "scallop" % "3.3.2",
-                // Language server protocol:
-                "org.eclipse.lsp4j" % "org.eclipse.lsp4j" % "0.8.1",
-                "com.google.code.gson" % "gson" % "2.7",
-                // REPLs:
-                "jline" % "jline" % "2.14.6"
-            ),
-        javaOptions ++= Seq("-Xss8M"),
-        fork := true,
-        run/connectInput := true,
-        run/outputStrategy := Some(StdoutOutput),
-        Test/console/initialCommands :=
-            (Test/console/initialCommands).value + """
-                import org.bitbucket.inkytonik.kiama._
-                import example.json.PrettyPrinter._
-                import example.json.JSONTree._
-            """.stripMargin,
-        Compile/doc/scalacOptions ++=
-            Seq(
-                if (scalaVersion.value.startsWith("2.10"))
-                    "-Ymacro-no-expand"
-                else
-                    "-Ymacro-expand:none",
-                "-doc-source-url",
-                    "https://bitbucket.org/inkytonik/kiama/src/master€{FILE_PATH}.scala"
-            ),
-        Test/doc/scalacOptions := (Compile/doc/scalacOptions).value
-    ).settings(
-       inConfig(Test)(baseAssemblySettings)
-    ).settings(
-        // Test/assembly/test := {},
-        Test/assembly/assemblyJarName := s"${name.value}-assembly-${version.value}-tests.jar"
-    ).dependsOn(
-        base % "compile-internal; test-internal",
-        core % "compile; test->test"
     )
 
 lazy val root =
@@ -287,5 +196,5 @@ lazy val root =
     ).settings(
         noPublishSettings : _*
     ).aggregate(
-        core, extras
+        core
     )

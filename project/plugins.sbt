@@ -13,3 +13,5 @@ addSbtPlugin("com.eed3si9n" % "sbt-assembly" % "0.14.9")
 // addSbtPlugin ("de.johoop" % "findbugs4sbt" % "1.1.2")
 
 // addSbtPlugin ("org.scalastyle" %% "scalastyle-sbt-plugin" % "0.2.0")
+
+addSbtPlugin("org.scala-js" % "sbt-scalajs" % "1.0.1")

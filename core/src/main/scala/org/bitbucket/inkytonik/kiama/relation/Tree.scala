@@ -102,24 +102,8 @@ class Tree[T <: AnyRef with Product, +R <: T](val originalRoot : R, shape : Tree
     import org.bitbucket.inkytonik.kiama.relation.Relation.emptyImage
     import org.bitbucket.inkytonik.kiama.relation.TreeRelation
     import org.bitbucket.inkytonik.kiama.relation.TreeRelation.childFromTree
-    import org.bitbucket.inkytonik.kiama.rewriting.Strategy
-    import org.bitbucket.inkytonik.kiama.rewriting.Cloner.lazyclone
-    import org.bitbucket.inkytonik.kiama.rewriting.Rewriter.{all, attempt, rule}
     import org.bitbucket.inkytonik.kiama.util.Comparison
     import org.bitbucket.inkytonik.kiama.util.Comparison.same
-
-    /**
-     * A version of `bottomup` that doesn't traverse bridges.
-     */
-    def bottomupNoBridges(s : Strategy) : Strategy =
-        rule[Bridge[_]] { case b => b } <+
-            (all(bottomupNoBridges(s)) <* s)
-
-    /**
-     * A version of `everywherebu` that doesn't traverse bridges.
-     */
-    def everywherebuNoBridges(s : Strategy) : Strategy =
-        bottomupNoBridges(attempt(s))
 
     /**
      * The root node of the tree. If this tree's `shape` argument is `EnsureTree`
@@ -133,10 +117,7 @@ class Tree[T <: AnyRef with Product, +R <: T](val originalRoot : R, shape : Tree
      * this structure as a tree in its own right.
      */
     lazy val root =
-        if (shape == EnsureTree)
-            lazyclone(originalRoot, everywherebuNoBridges)
-        else
-            originalRoot
+        originalRoot
 
     /**
      * The basic relations between a node and its children. All of the
