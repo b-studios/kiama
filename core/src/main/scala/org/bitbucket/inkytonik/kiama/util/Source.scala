@@ -11,7 +11,7 @@
 package org.bitbucket.inkytonik.kiama
 package util
 
-import java.io.Reader
+// import java.io.Reader
 
 /**
  * A simple source of characters.
@@ -96,7 +96,7 @@ trait Source {
      * useful if you want to use a source with other code that requires
      * a reader.
      */
-    def reader : Reader
+    // def reader : Reader
 
     /**
      * Run a function using this source as a file. The content of the source will be
@@ -111,13 +111,13 @@ trait Source {
  */
 case class StringSource(content : String, name : String = "") extends Source {
 
-    def reader : Reader = IO.stringreader(content)
+    // def reader : Reader = IO.stringreader(content)
 
     def useAsFile[T](fn : String => T) : T = {
         val filename = Filenames.makeTempFilename(name)
-        IO.createFile(filename, content)
+        // IO.createFile(filename, content)
         val t = fn(filename)
-        IO.deleteFile(filename)
+        // IO.deleteFile(filename)
         t
     }
 
@@ -132,7 +132,7 @@ case class FileSource(name : String, encoding : String = "UTF-8") extends Source
 
     lazy val content = scala.io.Source.fromFile(name, encoding).mkString
 
-    def reader : Reader = IO.filereader(name, encoding)
+    // def reader : Reader = IO.filereader(name, encoding)
 
     def useAsFile[T](fn : String => T) : T =
         fn(name)
