@@ -16,9 +16,8 @@ package util
  */
 object Filenames {
 
-    // import java.io.File.separatorChar
-    val separatorChar = '/'
-    // import java.lang.System.getProperty
+    import java.io.File.separatorChar
+    import java.lang.System.getProperty
 
     /**
      * Return a simplified filename where a string has been dropped if it
@@ -63,17 +62,6 @@ object Filenames {
         }
 
     /**
-     * Return a temporary file name based on the current time. Append the
-     * suffix (default: nothing).
-     */
-    def makeTempFilename(suffix : String = "") : String = "temp.tmp/tmp"
-// {
-//         val tmpDir = getProperty("java.io.tmpdir")
-//         val currentTime = java.lang.System.currentTimeMillis()
-//         s"${tmpDir}${separatorChar}kiama${currentTime}${suffix}"
-//     }
-
-    /**
      * Replace the extension of a filename with a new extension. E.g.
      * if the new extension is ".ll" and the filename is "foo.c", you
      * get "foo.ll". If the filename has no extension then the new
@@ -89,7 +77,7 @@ object Filenames {
     /**
      * Return the current working directory.
      */
-    def cwd() : String = "."
-        // getProperty("user.dir")
+    def cwd() : String =
+        getProperty("user.dir")
 
 }
