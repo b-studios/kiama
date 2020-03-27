@@ -14,7 +14,7 @@ package util
 private[util] class Key[T](val key: T) {
   override val hashCode = System.identityHashCode(key)
   override def equals(o: Any) = o match {
-    case k: Key[_] => o.hashCode == k.hashCode
+    case k: Key[_] => hashCode == k.hashCode
     case _ => false
   }
 }
@@ -79,7 +79,7 @@ class Memoiser[T, U] {
      * associated value.
      */
     def putIfAbsent(t : T, u : U) : Unit =
-      if (hasBeenComputedAt(t))  { put(t, u) }
+      if (!hasBeenComputedAt(t))  { put(t, u) }
 
     /**
      * Immediately reset the memo table.
