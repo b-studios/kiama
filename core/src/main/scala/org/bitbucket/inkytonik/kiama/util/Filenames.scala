@@ -16,7 +16,10 @@ package util
  */
 object Filenames {
 
-    import java.io.File.separatorChar
+    // import java.io.File.separatorChar
+
+    val separatorChar = '/'
+
     import java.lang.System.getProperty
 
     /**
@@ -41,6 +44,14 @@ object Filenames {
         }
         dropIgnoreSep(prefix.length)
 
+    }
+
+    /**
+     * Return the path to the directory without the filename
+     */
+    def directory(filename : String) : String = {
+        val onlyfile = dropDirectory(filename)
+        filename.stripSuffix(onlyfile)
     }
 
     /**
