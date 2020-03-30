@@ -30,7 +30,7 @@ mainClass := None
 
 // Settings to publish to github packages.
 // Remember to call sbt with the environment variable `GH_TOKEN=<SECRET>` set
-githubOwner := "b-studios"
-githubRepository := "kiama"
+//githubOwner := "b-studios"
+//githubRepository := "kiama"
 
 enablePlugins(ScalaJSPlugin)
