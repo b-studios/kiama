@@ -19,6 +19,7 @@ package util
  */
 class Memoiser[T, U] {
     import java.util.IdentityHashMap
+    import scala.jdk.CollectionConverters._
 
     val map: IdentityHashMap[T, U] = new IdentityHashMap
 
@@ -58,8 +59,7 @@ class Memoiser[T, U] {
     /**
      * A view of the set of keys that are currently in this memo table.
      */
-    def keys : Vector[T] =
-      map.keySet().toArray.toVector.asInstanceOf[Vector[T]]
+    def keys : Vector[T] = map.keySet().asScala.toVector
 
     /**
      * Store the value `u` under the key `t`.
@@ -112,7 +112,7 @@ class Memoiser[T, U] {
     /**
      * A view of the set of values that are currently in this memo table.
      */
-    def values : Vector[U] = map.values().toArray.toVector.asInstanceOf[Vector[U]]
+    def values : Vector[U] = map.values.asScala.toVector
 }
 
 /**
