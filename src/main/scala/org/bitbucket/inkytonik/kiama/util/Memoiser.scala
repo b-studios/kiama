@@ -11,13 +11,6 @@
 package org.bitbucket.inkytonik.kiama
 package util
 
-private[util] class Key[T](val key: T) {
-  override val hashCode = System.identityHashCode(key)
-  override def equals(o: Any) = o match {
-    case k: Key[_] => hashCode == k.hashCode
-    case _ => false
-  }
-}
 
 /**
  * A memoiser that can store arbitrary values of type `U` under keys of
@@ -25,14 +18,14 @@ private[util] class Key[T](val key: T) {
  * an appropriate type.
  */
 class Memoiser[T, U] {
-    import scala.collection.mutable.HashMap
+    import java.util.IdentityHashMap
 
-    val map: HashMap[Key[T], U] = HashMap.empty
+    val map: IdentityHashMap[T, U] = new IdentityHashMap
 
     /**
      * Get the value stored at key `t` or return null if no value.
      */
-    def apply(t : T) : U = map(new Key(t))
+    def apply(t : T) : U = map.get(t)
 
     /**
      * Duplicate an entry if possible. If `t1` has a memoised value associated
@@ -46,33 +39,33 @@ class Memoiser[T, U] {
      * Return the value stored at key `t` as an option.
      */
     def get(t : T) : Option[U] =
-      map.get(new Key(t))
+      Option(map.get(t))
 
-    /**
+  /**
      * Return the value stored at key `t` if there is one, otherwise
      * return `u`. `u` is only evaluated if necessary.
      */
     def getOrDefault(t : T, u : => U) : U =
-      map.get(new Key(t)).getOrElse(u)
+      get(t).getOrElse(u)
 
     /**
      * Has the value at `t` already been computed or not? By default, does
      * the memo table contain a value for `t`?
      */
     def hasBeenComputedAt(t : T) : Boolean =
-      map.isDefinedAt(new Key(t))
+      map.containsKey(t)
 
     /**
      * A view of the set of keys that are currently in this memo table.
      */
     def keys : Vector[T] =
-      map.keySet.map(_.key).toVector
+      map.keySet().toArray.toVector.asInstanceOf[Vector[T]]
 
     /**
      * Store the value `u` under the key `t`.
      */
     def put(t : T, u : U) : Unit =
-      map.put(new Key(t), u)
+      map.put(t, u)
 
     /**
      * Store the value `u` under the key `t` if `t` does not already have an
@@ -100,7 +93,7 @@ class Memoiser[T, U] {
      * Immediately reset the memo table at `t`.
      */
     def resetAt(t : T) : Unit =
-      map.remove(new Key(t))
+      map.remove(t)
 
     /**
      * The number of entries in the memo table.
@@ -119,7 +112,7 @@ class Memoiser[T, U] {
     /**
      * A view of the set of values that are currently in this memo table.
      */
-    def values : Vector[U] = map.values.toVector
+    def values : Vector[U] = map.values().toArray.toVector.asInstanceOf[Vector[U]]
 }
 
 /**
