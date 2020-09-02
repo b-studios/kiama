@@ -1,3 +1,9 @@
+# NOTE
+**This is a fork of the Kiama library. It only includes a very minimal set of features to be compilable with Scala-JS.**
+
+Please refer to the [original project](https://bitbucket.org/inkytonik/kiama).
+
+
 
 # Kiama
 
